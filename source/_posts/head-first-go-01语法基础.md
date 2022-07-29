@@ -1,5 +1,5 @@
 ---
-title: Head First Go - 语法基础
+title: Head First Go - 01语法基础
 date: 2022-07-19 23:19:11
 tags:
     - Go

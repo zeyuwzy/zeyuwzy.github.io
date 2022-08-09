@@ -44,7 +44,7 @@ ioctl中的`NS_GET_PARENT`用于获取用户命名空间的父子关系(ioctl_ns
 
 在拥有`cgroup namespace`的用户命名空间内拥有`CAP_SYS_ADMIN`的进程允许挂载`cgroup version 2` 文件系统和`cgroup version 1 named hierarchies` (cgroup filesystems mounted with the "none,name=" option)
 
-在拥有`cgroup namespace`的用户命名空间内拥有`CAP_SYS_ADMIN`的进程允许挂载`/proc`
+在拥有`pid namespace`的用户命名空间内拥有`CAP_SYS_ADMIN`的进程允许挂载`/proc`
 
 但是要挂载基于块的文件系统只能是在初始用户命名空间拥有`CAP_SYS_ADMIN`的进程
 

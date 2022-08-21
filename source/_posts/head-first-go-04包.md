@@ -12,7 +12,7 @@ tags:
 
 在src中，每个包的代码都位于它自己单独的子目录中。按照惯例，子目录名应该与包名相同
 
-![](../photos/src/go-tree.png)
+![](../photos/src/go/go-tree.png)
 
 ## 导出包
 
@@ -50,7 +50,7 @@ go get 下载和安装包
 go get github.com/headfirstgo/greeting
 ```
 
-![](../photos/src/go-get-tree.png)
+![](../photos/src/go/go-get-tree.png)
 
 ## 文档
 go doc `导入路径` 

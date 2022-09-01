@@ -105,7 +105,6 @@ func main() {
 ```
 
 ## struct 嵌入
-没法直接用字面量`{ {} }`给嵌套的结构体赋值 
 
 ```go
 package main
@@ -129,6 +128,9 @@ func main() {
 
 	st.sub.b = 100 //给子strcut成员赋值
 	fmt.Println(st.sub.b)
+
+	ta := sta{a: 10, sub: stb{b: 15}} //直接赋值嵌套结构体
+	fmt.Println(ta.sub.b)
 }
 ```
 ## 匿名struct

@@ -6,7 +6,7 @@ tags:
 ---
 
 ## 写在前面
-自从`20.10`版本,原来`Docker-CE`的仓库就不再使用，而是分成了[`Docker CLI`](https://github.com/docker/cli)和[Docker Engine](https://github.com/moby/moby),后续涉及源码的地方都将基于`20.10`展开
+自从`20.10`版本,原来`Docker-CE`的仓库就不再使用，而是分成了[`Docker CLI`](https://github.com/docker/cli)和[Docker Engine](https://github.com/moby/moby),后续涉及源码的地方都将基于`v20.10.12`展开
 
 ## Docker Client
 ```
@@ -57,3 +57,46 @@ type DockerCli struct {
 5. 初始化`Options` `cli/cobra.go/Initialize`, 初始化`APIClient`(用于和daemon通信)
 5. 解析`os.Args`后面的args,匹配相关命令
 6. 执行匹配到的命令
+
+## 源码编译cli
+cli是在docker容器中编译的,但是通过dockerfile构建容器时可能会遇到网络问题导致部分依赖拉取失败
+
+1. 修改`dockerfiles/Dockerfile.binary-native`,换源
+
+    ```dockerfile
+    #...
+    FROM    golang:${GO_VERSION}-alpine
+    #换源
+    RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+
+    RUN     apk add -U git bash coreutils gcc musl-dev
+    #...
+    ```
+
+2. 修改`dockerfiles/Dockerfile.dev`,添加代理, `GOPROXY=https://goproxy.cn,direct`
+    ```dockerfile
+    # ...
+    FROM golang AS esc
+    ARG ESC_VERSION=v0.2.0
+    RUN --mount=type=cache,target=/root/.cache/go-build \
+        --mount=type=cache,target=/go/pkg/mod \
+        --mount=type=tmpfs,target=/go/src/ \
+        GO111MODULE=on GOPROXY=https://goproxy.cn,direct go install github.com/mjibson/esc@${ESC_VERSION}
+
+    FROM golang AS gotestsum
+    ARG GOTESTSUM_VERSION=v0.4.0
+    RUN --mount=type=cache,target=/root/.cache/go-build \
+        --mount=type=cache,target=/go/pkg/mod \
+        --mount=type=tmpfs,target=/go/src/ \
+        GO111MODULE=on GOPROXY=https://goproxy.cn,direct go install gotest.tools/gotestsum@${GOTESTSUM_VERSION}
+
+    FROM golang AS vndr
+    ARG VNDR_VERSION=v0.1.2
+    RUN --mount=type=cache,target=/root/.cache/go-build \
+        --mount=type=cache,target=/go/pkg/mod \
+        --mount=type=tmpfs,target=/go/src/ \
+        GO111MODULE=on GOPROXY=https://goproxy.cn,direct go install github.com/LK4D4/vndr@${VNDR_VERSION}
+    #...
+    ```
+
+3. `sudo make -f docker.Makefile binary`, 最后二进制文件在工作目录下的`build`

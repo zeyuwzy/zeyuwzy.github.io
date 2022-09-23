@@ -206,6 +206,8 @@ stat/lstat 函数：
 
 	符号穿透：stat会。lstat不会。
 
+![](../photos/src/linux/io01.png)
+
 link/unlink:
 
 	隐式回收。

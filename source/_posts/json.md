@@ -2,7 +2,7 @@
 title: json
 date: 2020-08-24 09:00:00
 tags:
-    - C
+    - json
 ---
 
 ![](../photos/src/c/../json/json1.png)

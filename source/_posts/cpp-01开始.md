@@ -1,5 +1,5 @@
 ---
-title: C++ 基础
+title: C++ 01开始
 date: 2020-08-05 10:00:00
 tags:
     - C++
@@ -36,7 +36,7 @@ int main(int argc, char const *argv[])
 
 **endl**: 被称为**操纵符**（manipulator）的特殊值，效果是结束当前行，并将设备关联的缓冲区（buffer）中的内容刷到设备中。
 
-UNIX和Mac下:
+Unix和Mac下:
 - 键盘输入文件结束符：`ctrl+d`
 - 获取命令状态`echo $?`
 - 重定向 `./a.out < filea > fileb`

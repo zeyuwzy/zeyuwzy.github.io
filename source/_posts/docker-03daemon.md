@@ -13,25 +13,25 @@ dockerd [OPTIONS]
 服务端的入口函数在`cmd/dockerd/docker.go`
 
 dockerd将根据`options`来初始化服务,服务端的命令和客户端一样也是采用`cobra`构建
-1. 装载cobra命令模版`cmd/dockerd/newDaemonCommand`
-2. 执行`cmd/dockerd/docker_unix.go/runDaemon`
-3. 初始化各项参数,TLS、日志等级......
-4. linux下检测`euid`是不是`root`
-5. 设置umask
-6. 创建docker根目录,默认`/var/lib/docker`,以及docker exec目录,默认`/var/run/docker`
-7. 检测pid文件
-8. 配置`API server`和监听端口
-9. 初始化`ContainerD`以及退出清理函数
-10. `NewDaemon`创建daemon对象
+- 装载cobra命令模版`cmd/dockerd/newDaemonCommand`
+- 执行`cmd/dockerd/docker_unix.go/runDaemon`
+- 初始化各项参数,TLS、日志等级......
+- linux下检测`euid`是不是`root`
+- 设置umask
+- 创建docker根目录,默认`/var/lib/docker`,以及docker exec目录,默认`/var/run/docker`
+- 检测pid文件
+- 配置`API server`和监听端口
+- 初始化`ContainerD`以及退出清理函数
+- `NewDaemon`创建daemon对象
     ```go
         d, err := daemon.NewDaemon(ctx, cli.Config, pluginStore)
         if err != nil {
             return errors.Wrap(err, "failed to start daemon")
         }
     ```
-11. 将`api server`的应答接口与daemon对象绑定,`initRouter(routerOptions)`
+- 将`api server`的应答接口与daemon对象绑定,`initRouter(routerOptions)`
 
-12. 通过`goroutine`启动`api servier`监听 
+- 通过`goroutine`启动`api servier`监听 
     ```go
         // The serve API routine never exits unless an error occurs
         // We need to start it as a goroutine and wait on it so
@@ -39,28 +39,28 @@ dockerd将根据`options`来初始化服务,服务端的命令和客户端一样
         serveAPIWait := make(chan error)
         go cli.api.Wait(serveAPIWait)
     ```
-13. daemon结束会做`shutdownDaemon`停止进行中的容器
+- daemon结束会做`shutdownDaemon`停止进行中的容器
 
 ### NewDaemon
 `NewDaemon`会进一步初始化`docker daemon`,并返回`Daemon`对象,Daemon对象将响应`api servier`执行具体的操作
 
-1. 设置默认`mtu` 1500 
-2. 初始化`registry service`
-3. 对配置参数进行校验,对一些产生冲突的参数一起使用时报错并退出
-4. 检测内核版本和系统
-5. 创建`/var/lib/docker/containers`
-6. 创建`/var/lib/docker/runtimes`, 初始化runtimes
-7. 设置`grpc`,创建`containerdCli`
-8. 创建插件管理器 
-9. 创建`graphDrivers`
+- 设置默认`mtu` 1500 
+- 初始化`registry service`
+- 对配置参数进行校验,对一些产生冲突的参数一起使用时报错并退出
+- 检测内核版本和系统
+- 创建`/var/lib/docker/containers`
+- 创建`/var/lib/docker/runtimes`, 初始化runtimes
+- 设置`grpc`,创建`containerdCli`
+- 创建插件管理器 
+- 创建`graphDrivers`
    ```go
     // List of drivers that should be used in an order
 	priority = "btrfs,zfs,overlay2,fuse-overlayfs,aufs,overlay,devicemapper,vfs"
 
    ``` 
-11. 创建volumeService
-12. 创建imageService
-13. 创建容器客户端libcontainerd
+- 创建volumeService
+- 创建imageService
+- 创建容器客户端libcontainerd
 
 ## moby源码编译
 - v20.10.12

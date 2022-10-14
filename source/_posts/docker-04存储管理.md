@@ -84,3 +84,158 @@ root@zeyu-desktop:/var/lib/docker/image/overlay2/layerdb/sha256/efc088ed50a3b76e
 root@zeyu-desktop:/var/lib/docker/image/overlay2/layerdb/sha256/efc088ed50a3b76edfce1505de41e3317d521684dc0620f1cd87af5f6f28a9ab# ls
 cache-id  diff  parent  size  tar-split.json.gz
 ```
+
+## graphdriver
+```go
+type Driver interface {
+	ProtoDriver //定义了driver基本的功能
+	DiffDriver //对数据层之间的差异（diff）进行管理
+}
+```
+
+```go
+type ProtoDriver interface {
+	// String returns a string representation of this driver.
+    // 返回一个代表这个驱动的字符串，通常是这个驱动的名字
+	String() string
+	// CreateReadWrite creates a new, empty filesystem layer that is ready
+	// to be used as the storage for a container. Additional options can
+	// be passed in opts. parent may be "" and opts may be nil.
+	CreateReadWrite(id, parent string, opts *CreateOpts) error
+	// Create creates a new, empty, filesystem layer with the
+	// specified id and parent and options passed in opts. Parent
+	// may be "" and opts may be nil.
+    // 创建一个新的镜像层，需要调用者传进一个唯一的ID和所需的父镜像的ID
+	Create(id, parent string, opts *CreateOpts) error
+	// Remove attempts to remove the filesystem layer with this id.
+    // 根据指定的ID删除一个层
+	Remove(id string) error
+	// Get returns the mountpoint for the layered filesystem referred
+	// to by this id. You can optionally specify a mountLabel or "".
+	// Returns the absolute path to the mounted layered filesystem.
+    // 返回指定ID的层的挂载点的绝对路径
+	Get(id, mountLabel string) (fs containerfs.ContainerFS, err error)
+	// Put releases the system resources for the specified id,
+	// e.g, unmounting layered filesystem.
+    // 释放一个层使用的资源，比如卸载一个已经挂载的层
+	Put(id string) error
+	// Exists returns whether a filesystem layer with the specified
+	// ID exists on this driver.
+    // 查询指定的ID对应的层是否存在
+	Exists(id string) bool
+	// Status returns a set of key-value pairs which give low
+	// level diagnostic status about this driver.
+    // 返回这个驱动的状态，这个状态用一些键值对表示
+	Status() [][2]string
+	// Returns a set of key-value pairs which give low level information
+	// about the image/container driver is managing.
+    // 返回这个驱动正在管理的信息,用键值对表示
+	GetMetadata(id string) (map[string]string, error)
+	// Cleanup performs necessary tasks to release resources
+	// held by the driver, e.g., unmounting all layered filesystems
+	// known to this driver.
+    // 释放由这个驱动管理的所有资源，比如卸载所有的层
+	Cleanup() error
+}
+```
+
+```go
+// DiffDriver is the interface to use to implement graph diffs
+type DiffDriver interface {
+	// Diff produces an archive of the changes between the specified
+	// layer and its parent layer which may be "".
+	// 将指定ID的层相对父镜像层改动的文件打包并返回
+	Diff(id, parent string) (io.ReadCloser, error)
+	// Changes produces a list of changes between the specified layer
+	// and its parent layer. If parent is "", then all changes will be ADD changes.
+	// 返回指定镜像层与父镜像层之间的差异列表
+	Changes(id, parent string) ([]archive.Change, error)
+	// ApplyDiff extracts the changeset from the given diff into the
+	// layer with the specified id and parent, returning the size of the
+	// new layer in bytes.
+	// The archive.Reader must be an uncompressed stream.
+	// 从差异文件包中提取差异列表，并应用到指定ID的层与父镜像层，返回新镜像层的大小
+	ApplyDiff(id, parent string, diff io.Reader) (size int64, err error)
+	// DiffSize calculates the changes between the specified id
+	// and its parent and returns the size in bytes of the changes
+	// relative to its base filesystem directory.
+	// 计算指定ID层与其父镜像层的差异，并返回差异相对于基础文件系统的大小
+	DiffSize(id, parent string) (size int64, err error)
+}
+```
+`Docker`中的任何存储驱动都需要实现上述`Driver`接口
+`linux`系统下驱动的优先级被定义在`graphdriver/drivier_linux.go`中
+```go
+priority = "btrfs,zfs,overlay2,fuse-overlayfs,aufs,overlay,devicemapper,vfs"
+```
+
+### 驱动注册
+`graphdriver`会维护一个`map`用于存储注册的驱动名称和对应的初始化函数
+```go
+var (
+	// All registered drivers
+	drivers map[string]InitFunc
+)
+```
+
+以`overlay2`为例,只需要实现一个`init`函数
+
+```go
+func init() {
+	graphdriver.Register(driverName, Init)
+}
+```
+当`overlay2`的包被包含的时候自动就会调用包中的`init`函数,所有注册的驱动都在`graphdriver/register`,其他模块使用`register`包就会把相关的驱动注册
+
+这里`import`时在包路径前面加了一个`_`,只有这样才能调用到相关包的`init`函数
+```go
+package register // import "github.com/docker/docker/daemon/graphdriver/register"
+
+import (
+	// register the overlay2 graphdriver
+	_ "github.com/docker/docker/daemon/graphdriver/overlay2"
+)
+```
+
+### 创建Driver
+检查环境变量`DOCKER_DRIVER`和配置是否提供驱动名称,如果有的话直接在`map`按驱动名称调用对应驱动的初始化函数;否则就会按照优先级去查找相关的驱动
+
+`Docker`镜像管理部分与存储驱动在设计上完全分离了，镜像层或者容器层在存储驱动中拥有一个新的标示`ID`，在镜像层（roLayer）中称为`cacheID`，容器层（mountedLayer）中为`mountID`。在`Unix`环境下，`mountID`是随机生成的并保存在`mountedLayer`的元数据`mountID`中,持久化文件在`/var/lib/docker/image/overlay2/layerdb/mounts/container_id`
+
+### overlay2 driver
+`OverlayFS`是一种新型联合文件系统（union filesystem），它允许用户将一个文件系统与另一个文件系统重叠（overlay），在上层的文件系统中记录更改，而下层的文件系统保持不变
+
+```sh
+mkdir lower upper work merged
+mount -t overlay overlay￼-o lowerdir=./lower, upperdir=./upper, workdir=./work ./merged
+```
+`/var/lib/docker/overlay2`中
+- 容器层
+	- `mountID`
+		```bash
+		root@zeyu-desktop:/var/lib/docker/overlay2/89610a9bd010adaa7f2281c5b3c9d96d337ff87660411539a58f163d3cec1704# ls
+		diff  link  lower  work
+		```	
+		- diff 存放容器运行时变化的文件(overlay的upper)
+		- link 描述该层对应的软连接 所有的链接文件都在`/var/lib/docker/overlay2/l/`,使用软连接可以防止`lower`层过多时命令过长挂载失败
+		- lower 描述该层对应所有的`lower`层的软连接
+		- work `overlay`工作目录
+		- merged 只有在运行时创建的`overlay`挂载点
+	- `mountID-init`
+		```bash
+		root@zeyu-desktop:/var/lib/docker/overlay2/89610a9bd010adaa7f2281c5b3c9d96d337ff87660411539a58f163d3cec1704-init# ls
+		committed  diff  link  lower  work
+		```
+- 镜像层
+	- `cacheID`
+		```bash
+		root@zeyu-desktop:/var/lib/docker/overlay2/47bdd7a31bb6ad0f91d51d1c3b340e382d4a1427243eab85e4ec6ee1d9fb6d44# ls
+		committed  diff  link
+		```
+
+```bash
+
+mount
+
+overlay on /var/lib/docker/overlay2/89610a9bd010adaa7f2281c5b3c9d96d337ff87660411539a58f163d3cec1704/merged type overlay (rw,relatime,lowerdir=/var/lib/docker/overlay2/l/VADBLOWNHH7XWGLDL2LLUS4LUU:/var/lib/docker/overlay2/l/D3ZMYBHFKVFZSLDBXLD3T6I26O,upperdir=/var/lib/docker/overlay2/89610a9bd010adaa7f2281c5b3c9d96d337ff87660411539a58f163d3cec1704/diff,workdir=/var/lib/docker/overlay2/89610a9bd010adaa7f2281c5b3c9d96d337ff87660411539a58f163d3cec1704/work,xino=off)
+```

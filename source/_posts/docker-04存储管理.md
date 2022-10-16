@@ -6,6 +6,10 @@ tags:
 ---
 
 ## 基本概念
+`registry`用以保存`Docker`镜像，其中还包括镜像层次结构和关于镜像的元数据(Docker Hub)
+
+`repository`即由具有某个功能的`Docker`镜像的所有迭代版本构成的镜像组
+
 `registry`是`repository`的集合，`repository`是镜像的集合
 
 `Docker`内部的`image`(镜像)概念是用来存储一组镜像相关的元数据信息，主要包括镜像的架构、镜像默认配置信息、构建镜像的容器配置信息、包含所有镜像层信息的`rootfs`,`Docker`用`rootfs`中的`diff_id`计算出内容寻址的索引（chainID）来获取`layer`相关信息，进而获取每一个镜像层的文件内容

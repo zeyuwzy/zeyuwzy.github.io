@@ -13,12 +13,12 @@ dockerd [OPTIONS]
 服务端的入口函数在`cmd/dockerd/docker.go`
 
 dockerd将根据`options`来初始化服务,服务端的命令和客户端一样也是采用`cobra`构建
-- 装载cobra命令模版`cmd/dockerd/newDaemonCommand`
+- 装载cobra命令模版`cmd/dockerd/docker.go/newDaemonCommand`
 - 执行`cmd/dockerd/docker_unix.go/runDaemon`
 - 初始化各项参数,TLS、日志等级......
 - linux下检测`euid`是不是`root`
 - 设置umask
-- 创建docker根目录,默认`/var/lib/docker`,以及docker exec目录,默认`/var/run/docker`
+- 创建docker根目录,默认`/var/lib/docker`,以及`docker exec`目录,默认`/var/run/docker`
 - 检测pid文件
 - 配置`API server`和监听端口
 - 初始化`ContainerD`以及退出清理函数
@@ -62,7 +62,27 @@ dockerd将根据`options`来初始化服务,服务端的命令和客户端一样
 - 创建imageService
 - 创建容器客户端libcontainerd
 
+## 创建容器流程
+
+`docker create`
+
+- 当客户端发起创建容器，`daemon`接收请求后创建容器在`daemon/creat.go/ContainerCreate`
+- 通过`imageService`获取创建容器对应的镜像,并提取镜像`ID`
+    ```go
+		img, err = daemon.imageService.GetImage(opts.params.Config.Image, opts.params.Platform)
+    ```
+- 通过`newContainer`函数创建`Container`结构 
+    - 创建容器`ID`和名称`generateIDAndName`
+- 通过`imageService`的`CreateLayer`函数创建容器在`graphdriver`上的`init`层(daemon/initlayer/setup_unix.go/Setup)和读写层
+- 创建容器根目录`/var/lib/docker/containers/container-id`
+- 在容器根目录创建`checkpoint`和容器相关配置文件信息
+- 向`daemon`注册该容器
+- 将容器状态设置为`stopped`
+- 函数调用成功后会返回容器`ID`和创建时的一些警告
+
+
 ## moby源码编译
+
 - v20.10.12
 - aarch linux20.04
 

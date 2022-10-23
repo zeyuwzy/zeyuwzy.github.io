@@ -80,6 +80,27 @@ dockerd将根据`options`来初始化服务,服务端的命令和客户端一样
 - 将容器状态设置为`stopped`
 - 函数调用成功后会返回容器`ID`和创建时的一些警告
 
+## 启动容器流程
+
+`docker start`
+
+- 当客户端发起启动容器流程时,`daemon`接收请求后执行容器核心流程在`daemon/start.go/ContainerStart`
+- 根据容器的`ID`获取`Container`数据结构
+- 检查要运行的容器是否处于暂停、已经执行、被移除的状态
+- 对参数`ctr.HostConfig`进行验证
+- 挂载容器读写层到`merge`
+    ```go
+    	if err := daemon.conditionalMountOnStart(container); err != nil {
+    		return err
+    	}
+    ```
+- 初始化网络相关配置`hosts`、`hostname`、`resolv.conf`
+- 后面就是和`containerd`交互
+- 基于容器的相关参数去初始化`oci`(Open Container Initiative)`runtime-spec`项目的`Spec`数据结构
+- 初始化`ShimConfig`,`containerd`将通过`shim`去调用`runc`
+- 执行`daemon.containerd.Create`创建容器
+- 执行`daemon.containerd.Start`启动容器
+- 设置容器的状态
 
 ## moby源码编译
 

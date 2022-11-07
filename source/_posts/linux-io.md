@@ -266,6 +266,10 @@ dup 和 dup2：
 
 	int dup2(int oldfd, int newfd); 文件描述符复制。重定向。
 
+	若参数newfd已经被程序使用，则系统就会将newfd所指的文件关闭，若newfd等于oldfd，则返回newfd,而不关闭newfd所指的文件。dup2所复制的文件描述符与原来的文件描述符共享各种文件状态。共享所有的锁定，读写位置和各项权限或flags等
+
+	成功返回新文件描述符，失败返回-1
+
 
 
 fcntl 函数实现 dup：

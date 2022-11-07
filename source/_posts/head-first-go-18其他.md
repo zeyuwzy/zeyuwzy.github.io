@@ -160,3 +160,6 @@ func main() {
 	fmt.Println(time.Now())
 }
 ```
+
+- `chan<- int`是一个只能发送的通道，可以发送但是不能接收
+- `<-chan int`是一个只能接收的通道，可以接收但是不能发送

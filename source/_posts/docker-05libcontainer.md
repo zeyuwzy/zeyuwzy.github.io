@@ -107,6 +107,57 @@ tags:
                 ```
         - 调用`parentProcess`的`forwardChildLogs`通过管道不断获取容器内的日志
         - 调用`parentProcess`的`start`，其实就是执行`func (p *initProcess) start() (retErr error)`
-            - 这里会执行`runc init`,创建子进程完成容器的初始化工作,父子进程通过管道通信
+			- 执行`err := p.cmd.Start()`会执行`runc init`命令,但是这个子进程会阻塞在`nsenter`的`func init()`，直到通过`nsenter`让父进程把需要用到相关`ns`的信息写入`socketpair`后才执行后面的函数
+				```go
+				if _, err := io.Copy(p.messageSockPair.parent, p.bootstrapData); err != nil {
+					return newSystemErrorWithCause(err, "copying bootstrap data to pipe")
+				}
+				err = <-waitInit
+				```
+			- 向子进程发送`initConfig`,`init`进行容器初始化,创建网络、路由表、`rootfs`等
+			- 通过`messageSockPair.parent`进行一系列消息交互,`init`向父进程发送`procReady`,等待父进程发送`procRun`,代表`init`可以进行`execv`
+			- 最后`init`会以只写方式打开`exec.fifo`,这里会阻塞直到另一个进程以读方式打开管道。然后写一个字符`0`,去执行后续的`execv`
+				```go
+				fd, err := unix.Open("/proc/self/fd/"+strconv.Itoa(l.fifoFd), unix.O_WRONLY|unix.O_CLOEXEC, 0)
+				if err != nil {
+					return newSystemErrorWithCause(err, "open exec fifo")
+				}
 
+				if _, err := unix.Write(fd, []byte("0")); err != nil {
+					return newSystemErrorWithCause(err, "write 0 exec fifo")
+				}
+				```
+	
 
+- 最终`runc init`将分离并作为容器内的`init`一直执行,容器的状态变为`created`
+
+## 运行容器
+`runc start test`
+- 基于`/run/runc/{containerid}/state.json`加载`container`结构
+- `start`就是执行`container`的`exec`接口,将对应容器的`exec.fifo`以读方式打开,这样`init`就不会阻塞,去执行`exec`的命令,后面使用`select`读取`fifo`内容(字符`0`)
+- 读取到字符`0`后`handleFifoResult(result)`将删除`exec.fifo`文件
+
+```go
+func (c *linuxContainer) exec() error {
+	path := filepath.Join(c.root, execFifoFilename)
+	pid := c.initProcess.pid()
+	blockingFifoOpenCh := awaitFifoOpen(path)
+	for {
+		select {
+		case result := <-blockingFifoOpenCh:
+			return handleFifoResult(result)
+
+		case <-time.After(time.Millisecond * 100):
+			stat, err := system.Stat(pid)
+			if err != nil || stat.State == system.Zombie {
+				// could be because process started, ran, and completed between our 100ms timeout and our system.Stat() check.
+				// see if the fifo exists and has data (with a non-blocking open, which will succeed if the writing process is complete).
+				if err := handleFifoResult(fifoOpen(path, false)); err != nil {
+					return errors.New("container process is already dead")
+				}
+				return nil
+			}
+		}
+	}
+}
+```

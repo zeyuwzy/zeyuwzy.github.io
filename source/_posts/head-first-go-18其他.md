@@ -163,3 +163,53 @@ func main() {
 
 - `chan<- int`是一个只能发送的通道，可以发送但是不能接收
 - `<-chan int`是一个只能接收的通道，可以接收但是不能发送
+
+## select
+`select`用于监听`channel`有关的`IO`操作
+
+```go
+select {
+    case <-ch1:
+        // 如果从 ch1 信道成功接收数据，则执行该分支代码
+    case ch2 <- 1:
+        // 如果成功向 ch2 信道成功发送数据，则执行该分支代码
+    default:
+        // 如果上面都没有成功，则进入 default 分支处理流程
+}
+```
+
+- `select`语句 只能用于`channel`信道的`IO`操作，每个`case`都必须是一个信道
+- 如果不设置`default`条件，当没有`IO`操作发生时，`select`语句就会一直阻塞
+- 如果有一个或多个`IO`操作发生时，`Go`运行时会随机选择一个`case`执行，但此时将无法保证执行顺序
+- 对于`case`语句，如果存在信道值为`nil`的读写操作，则该分支将被忽略，可以理解为相当于从`select`语句中删除了这个`case`
+- 对于空的`select`语句，会引起死锁
+- 对于在`for`中的`select`语句，不能添加`default`，否则会引起`cpu`占用过高的问题
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch1 := make(chan string)
+
+	go func() {
+		for {
+			time.Sleep(time.Second * 2)
+			ch1 <- "hhhhhh"
+		}
+	}()
+
+	for {
+		select {
+		case str := <-ch1:
+			fmt.Println("receive str", str)
+		case <-time.After(time.Second * 5): //超时处理
+			fmt.Println("timeout!!")
+		}
+	}
+}
+```

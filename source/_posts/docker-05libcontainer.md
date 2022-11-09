@@ -128,12 +128,12 @@ tags:
 				}
 				```
 	
-
-- 最终`runc init`将分离并作为容器内的`init`一直执行,容器的状态变为`created`
+- 最终`runc init`进程将分离并作为容器内的`init`一直执行,容器的状态变为`created`
+- 容器的状态会保存在`/run/runc/${containerid}/state.json`
 
 ## 运行容器
 `runc start test`
-- 基于`/run/runc/{containerid}/state.json`加载`container`结构
+- 基于`/run/runc/${containerid}/state.json`加载`container`结构
 - `start`就是执行`container`的`exec`接口,将对应容器的`exec.fifo`以读方式打开,这样`init`就不会阻塞,去执行`exec`的命令,后面使用`select`读取`fifo`内容(字符`0`)
 - 读取到字符`0`后`handleFifoResult(result)`将删除`exec.fifo`文件
 

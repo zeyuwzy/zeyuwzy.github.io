@@ -7,6 +7,13 @@ tags:
 
 ## 基本概念
 `registry`用以保存`Docker`镜像，其中还包括镜像层次结构和关于镜像的元数据(Docker Hub)
+```go 
+type Daemon struct {
+	...
+	RegistryService   registry.Service
+	...
+}
+```
 
 `repository`即由具有某个功能的`Docker`镜像的所有迭代版本构成的镜像组
 
@@ -45,6 +52,14 @@ Docker默认采用SHA256算法根据镜像元数据配置文件计算出镜像ID
 ```
 
 ## image元数据
+
+```go
+type Daemon struct {
+	...
+	imageService      *images.ImageService
+	...
+```
+
 `imageStore`则管理镜像ID与镜像元数据之间的映射关系以及元数据的持久化操作，持久化文件位于`/var/lib/docker/image/[graph_driver]/imagedb/content/sha256/[image_id]`中
 
 内容包括镜像架构,构建镜像相关配置信息、创建该镜像的容器ID和配置、创建时间、创建该镜像的`Docker`版本、构建镜像的历史信息、操作系统以及`rootfs`组成

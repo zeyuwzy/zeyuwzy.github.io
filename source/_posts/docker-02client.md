@@ -17,7 +17,7 @@ tags:
 
 ### 01 初始化DockerCli
 
-调用`cli/command/cli.go/NewDockerCli`实例化一个cli,这里会去获取环境变量、设置默认的`store.Config`、配置默认的标准输入输出及错误输出
+调用`cli/command/cli.go/NewDockerCli`实例化一个`cli`,这里会去获取环境变量、设置默认的`store.Config`、配置默认的标准输入输出及错误输出
 
 `DockerCli`将作为客户端的上下文存在于整个生命周期
 
@@ -53,13 +53,13 @@ type DockerCli struct {
     }
     ```
 3. 初始化命令: `cli/command/commands/commands.go/AddCommands`,`cli/command/container`下包含容器相关的命令,`cli/command/image`下包含镜像相关的命令,以此类推
-4. 解析传入的`Options` `cli/cobra.go/HandleGlobalFlags`,将os.Args的`Options`切分后面就是`args`
-5. 初始化`Options` `cli/cobra.go/Initialize`, 初始化`APIClient`(用于和daemon通信)
-5. 解析`os.Args`后面的args,匹配相关命令
+4. 解析传入的`Options` `cli/cobra.go/HandleGlobalFlags`,将`os.Args`的`Options`切分后面就是`args`
+5. 初始化`Options` `cli/cobra.go/Initialize`, 初始化`APIClient`(用于和`daemon`通信)
+5. 解析`os.Args`后面的`args`,匹配相关命令
 6. 执行匹配到的命令
 
 ## 源码编译cli
-cli是在docker容器中编译的,但是通过dockerfile构建容器时可能会遇到网络问题导致部分依赖拉取失败
+`cli`是在`docker`容器中编译的,但是通过`dockerfile`构建容器时可能会遇到网络问题导致部分依赖拉取失败
 
 1. 修改`dockerfiles/Dockerfile.binary-native`,换源
 

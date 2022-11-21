@@ -12,24 +12,24 @@ dockerd [OPTIONS]
 
 服务端的入口函数在`cmd/dockerd/docker.go`
 
-dockerd将根据`options`来初始化服务,服务端的命令和客户端一样也是采用`cobra`构建
-- 装载cobra命令模版`cmd/dockerd/docker.go/newDaemonCommand`
+`dockerd`将根据`options`来初始化服务,服务端的命令和客户端一样也是采用`cobra`构建
+- 装载`cobra`命令模版`cmd/dockerd/docker.go/newDaemonCommand`
 - 执行`cmd/dockerd/docker_unix.go/runDaemon`
-- 初始化各项参数,TLS、日志等级......
-- linux下检测`euid`是不是`root`
-- 设置umask
-- 创建docker根目录,默认`/var/lib/docker`,以及`docker exec`目录,默认`/var/run/docker`
-- 检测pid文件
+- 初始化各项参数,`TLS`、日志等级......
+- `linux`下检测`euid`是不是`root`
+- 设置`umask`
+- 创建`docker`根目录,默认`/var/lib/docker`,以及`docker exec`目录,默认`/var/run/docker`
+- 检测`pid`文件
 - 配置`API server`和监听端口
 - 初始化`ContainerD`以及退出清理函数
-- `NewDaemon`创建daemon对象
+- `NewDaemon`创建`daemon`对象
     ```go
         d, err := daemon.NewDaemon(ctx, cli.Config, pluginStore)
         if err != nil {
             return errors.Wrap(err, "failed to start daemon")
         }
     ```
-- 将`api server`的应答接口与daemon对象绑定,`initRouter(routerOptions)`
+- 将`api server`的应答接口与`daemon`对象绑定,`initRouter(routerOptions)`
 
 - 通过`goroutine`启动`api servier`监听 
     ```go
@@ -39,7 +39,7 @@ dockerd将根据`options`来初始化服务,服务端的命令和客户端一样
         serveAPIWait := make(chan error)
         go cli.api.Wait(serveAPIWait)
     ```
-- daemon结束会做`shutdownDaemon`停止进行中的容器
+- `daemon`结束会做`shutdownDaemon`停止进行中的容器
 
 ### NewDaemon
 `NewDaemon`会进一步初始化`docker daemon`,并返回`Daemon`对象,Daemon对象将响应`api servier`执行具体的操作
@@ -49,7 +49,7 @@ dockerd将根据`options`来初始化服务,服务端的命令和客户端一样
 - 对配置参数进行校验,对一些产生冲突的参数一起使用时报错并退出
 - 检测内核版本和系统
 - 创建`/var/lib/docker/containers`
-- 创建`/var/lib/docker/runtimes`, 初始化runtimes
+- 创建`/var/lib/docker/runtimes`, 初始化`runtimes`
 - 设置`grpc`,创建`containerdCli`
 - 创建插件管理器 
 - 创建`graphDrivers`
@@ -58,9 +58,9 @@ dockerd将根据`options`来初始化服务,服务端的命令和客户端一样
 	priority = "btrfs,zfs,overlay2,fuse-overlayfs,aufs,overlay,devicemapper,vfs"
 
    ``` 
-- 创建volumeService
-- 创建imageService
-- 创建容器客户端libcontainerd
+- 创建`volumeService`
+- 创建`imageService`
+- 创建容器客户端`libcontainerd`
 
 ## 创建容器流程
 

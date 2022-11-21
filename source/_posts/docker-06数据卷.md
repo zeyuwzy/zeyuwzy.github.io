@@ -57,4 +57,4 @@ docker run --rm --volumes-from vol_bck -v $(pwd):/backup ubuntu tar xvf /backup/
 ```
 
 ## 实现
-数据卷都在`runc`基于`bind mount`实现,将需要绑定的原地址、目的地址写到`config.json`,`runc`在创建`rootfs`时会将对应地址绑定到新的`rootfs`然后支持`pivot_root`
+数据卷都在`runc`基于`bind mount`实现,将需要绑定的原地址、目的地址写到`runtime spec`文件,`runc`在创建`rootfs`时会将对应地址绑定到新的`rootfs`然后支持`pivot_root`

@@ -55,3 +55,6 @@ docker run --rm --volumes-from vol_simple -v $(pwd):/backup ubuntu tar cvf /back
 docker run -it --name vol_bck -v /data ubuntu /bin/bash
 docker run --rm --volumes-from vol_bck -v $(pwd):/backup ubuntu tar xvf /backup/data.tar -C /​
 ```
+
+## 实现
+数据卷都在`runc`基于`bind mount`实现,将需要绑定的原地址、目的地址写到`config.json`,`runc`在创建`rootfs`时会将对应地址绑定到新的`rootfs`然后支持`pivot_root`

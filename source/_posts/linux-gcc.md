@@ -186,3 +186,22 @@ Makefile
 
 ![](../photos/src/linux/gcc04.png)
 ![](../photos/src/linux/gcc05.png)
+
+automake
+
+- autoscan
+- mv configure.scan configure.ac
+	- AM_INIT_AUTOMAKE
+	- AC_CONFIG_FILES(Makefile)
+
+- aclocal
+
+- 创建.in
+	- autoheader
+	- touch Makefile.am
+	- automake --add-missing
+
+- autoconf
+
+
+![](../photos/src/linux/gcc06.png)

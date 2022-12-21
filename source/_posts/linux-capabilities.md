@@ -101,7 +101,7 @@ root用户执行`execve`时`ambient`会被清空
 - `bounding set`会和文件的`permitted set`做与运算后添加到新进程的`permitted set`
 - 如果一个能力不在`bounding set`，那么也无法将这个能力添加到`inheritable set`,即使这个能力在`permitted set`
 
-在计算`execve`新进程的`permitted set`时，`bounding set`只会和文件的`permitted set`与运算，不会与`inheritalbe set`与运算,如果一个能力在进程的`inheritable set`而不在`bounding set`时，只要文件的`inheritable set`有该能力，还是可以将这个能力添加到新进程`permitted set`
+在计算`execve`新进程的`permitted set`时，`bounding set`只会和文件的`permitted set`与运算，不会与`inheritalbe set`与运算,如果一个能力在进程的`inheritable set`而不在`bounding set`时，只要文件的`inheritable set`有该能力，还是可以将这个能力添加到新进程`permitted set`；当一个进程在`bounding set`去除了一个能力，但是进程要`exec`的文件在`ep`有对应能力时,`exec`将无权限执行,除非将当前进程的`inheritable set`和文件`inheritable set`都设置上对应能力
  
 ### 2.6.25后的内核
 `bounding set`不再是系统范围的能力集，而是作用到每个线程

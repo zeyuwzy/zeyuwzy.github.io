@@ -161,3 +161,11 @@ func (c *linuxContainer) exec() error {
 	}
 }
 ```
+
+`runc exec`
+
+`exec`时创建的`parentProcess`对应实例就不是`initProcess`而是`setnsProcess`,并且在执行`data, err := c.bootstrapData(0, state.NamespacePaths)`时不需要任何`cloneFlags`,只需要`setns`相关进程对应`ns`路径
+
+然后执行`setnsProcess`的`start()`,去执行`/proc/self/exe init`, 将在`main`之前调用`nsexec.c`的`nsexec`去`setns`
+
+执行完`main`之前命名空间切换操作将来到`setns_init_linux.go`中的`Init`，根据父进程传入的`initConfig`执行容器`tty`、能力、`Seccomp`等配置	,最后执行`execv`

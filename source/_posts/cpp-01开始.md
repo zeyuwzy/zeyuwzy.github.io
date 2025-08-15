@@ -7,7 +7,7 @@ tags:
 ## 
 参考C++ Primer
 
-[Cpp_Primer_Practice](https://github.com/zeyusteel/Cpp_Primer_Practice)
+[Cpp_Primer_Practice](https://github.com/zeyuwzy/Cpp_Primer_Practice)
 
 ## 输入输出
 ```c++

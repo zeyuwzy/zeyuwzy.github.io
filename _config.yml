@@ -103,7 +103,7 @@ theme: yilia
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: git@github.com:zeyusteel/zeyusteel.github.io.git
+  repo: git@github.com:zeyuwzy/zeyuwzy.github.io.git
   branch: main
 
 jsonContent:

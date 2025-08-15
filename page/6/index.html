@@ -2031,7 +2031,7 @@ public:
     <div class="article-entry" itemprop="articleBody">
       
         <h2 id=""><a href="#" class="headerlink" title=""></a></h2><p>参考C++ Primer</p>
-<p><a target="_blank" rel="noopener" href="https://github.com/zeyusteel/Cpp_Primer_Practice">Cpp_Primer_Practice</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/zeyuwzy/Cpp_Primer_Practice">Cpp_Primer_Practice</a></p>
 <h2 id="输入输出"><a href="#输入输出" class="headerlink" title="输入输出"></a>输入输出</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="type">int</span> a,b;    </span><br><span class="line">    std::cin &gt;&gt; a &gt;&gt; b;</span><br><span class="line">    std::cout &lt;&lt; a + b &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>&lt;&lt;</code>运算符接受两个运算对象:左侧的运算对象必须是一个<code>ostream</code>对象，右侧的运算对象是要打印的值。此运算符将给定的值写到给定的<code>ostream</code>对象中。输出运算符的计算结果就是其左侧运算对象。即计算结果就是我们写入给定值的那个<code>ostream</code>对象</p>
 <p><code>&gt;&gt;</code>接受一个<code>istream</code>作为其左侧运算对象，接受一个对象作为其右侧运算对象。它从给定的<code>istream</code>读入数据，并存入给定对象中。与输出运算符类似，输入运算符返回其左侧运算对象作为其计算结果</p>
